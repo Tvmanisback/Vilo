@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Vilo for VuloChat
 // @namespace    https://github.com/Tvmanisback/Vilo
-// @version      2.0.0
-// @description  Native Settings tab with working plugins and themes for VuloChat
+// @version      2.1.0
+// @description  Standalone Vilo tab with searchable plugins and themes for VuloChat
 // @match        https://tvmanisback.github.io/VuloChat/*
 // @run-at       document-idle
 // @grant        GM_getValue
@@ -19,22 +19,27 @@
   if (window.__VILO_V2__) return;
   window.__VILO_V2__ = true;
 
-  const STORE = 'vilo.v2.settings';
+  const STORE = 'vilo.v3.settings';
   const LOG = 'vilo.v2.message-log';
   const DRAFT = 'vilo.v2.drafts';
   const defaults = {
     plugins: {
-      timestamps: true, compact: false, copy: true, codeCopy: true,
-      charCount: true, wordCount: false, emojiBar: false, hideAvatars: false,
-      focusMode: false, collapseMedia: false, linkLabels: true, jumpLatest: true,
-      draftBackup: true, enterNewline: false, markdownHelp: false, imageFit: false,
-      reduceMotion: false, messageLogger: false, messageSearch: true,
-      replyHighlight: true, readableText: false
+      timestamps: false, compact: false, copy: false, codeCopy: false,
+      charCount: false, wordCount: false, emojiBar: false, hideAvatars: false,
+      focusMode: false, collapseMedia: false, linkLabels: false, jumpLatest: false,
+      draftBackup: false, enterNewline: false, markdownHelp: false, imageFit: false,
+      reduceMotion: false, messageLogger: false, messageSearch: false,
+      replyHighlight: false, readableText: false
     },
     theme: 'Violet Glow', customCSS: '', loggerLimit: 500
   };
   let saved = {};
   try { saved = GM_getValue(STORE, {}) || {}; } catch {}
+  // Start clean in v2.1: previous plugin opt-ins are not carried forward. Preserve appearance preferences only.
+  if (!saved.__vilo21Initialized) {
+    let previous = {}; try { previous = GM_getValue('vilo.v2.settings', {}) || {}; } catch {}
+    saved = { theme: previous.theme || 'Violet Glow', customCSS: previous.customCSS || '', loggerLimit: previous.loggerLimit || 500, __vilo21Initialized: true };
+  }
   const cfg = {
     ...defaults, ...saved,
     plugins: { ...defaults.plugins, ...(saved.plugins || {}) }
@@ -103,7 +108,7 @@
     .vilo-theme-dots{display:flex;gap:5px;margin-top:10px}.vilo-theme-dots i{width:15px;height:15px;border-radius:50%}
     .vilo-inline-time{font-size:11px;color:rgb(var(--vulo-muted));margin-left:8px}
     .vilo-message-action{font-size:11px;border:1px solid rgb(var(--vulo-line));border-radius:5px;padding:3px 7px;margin:4px 6px 4px 0;background:rgb(var(--vulo-rail));color:rgb(var(--vulo-text));cursor:pointer}
-    #vilo-draft-stats{font-size:11px;color:rgb(var(--vulo-muted));text-align:right;padding:2px 4px}
+    #vilo-standalone-tab{position:fixed;z-index:10001;left:10px;bottom:18px;border:1px solid rgb(var(--vulo-line));border-radius:12px;padding:10px 14px;background:rgb(var(--vulo-accent));color:white;font:700 13px/1 Inter,system-ui,sans-serif;box-shadow:0 5px 20px #0005;cursor:pointer}\n    #vilo-standalone-overlay{position:fixed;z-index:10000;inset:0;background:#08070dcc;display:flex;align-items:center;justify-content:center;padding: min(4vw,28px)}\n    #vilo-standalone-window{width:min(900px,100%);height:min(780px,100%);overflow:auto;background:rgb(var(--vulo-chat));border:1px solid rgb(var(--vulo-line));border-radius:14px;padding:22px;box-shadow:0 20px 80px #0009}\n    .vilo-plugin-row[hidden]{display:none!important}\n    #vilo-draft-stats{font-size:11px;color:rgb(var(--vulo-muted));text-align:right;padding:2px 4px}
     #vilo-emoji-bar{display:flex;gap:5px;margin:0 0 6px}
     #vilo-emoji-bar button{border:0;border-radius:6px;padding:5px 7px;background:rgb(var(--vulo-side));cursor:pointer}
     #vilo-jump-latest{position:fixed;z-index:40;right:24px;bottom:86px;border:0;border-radius:20px;padding:9px 13px;background:rgb(var(--vulo-accent));color:white;font-weight:600;box-shadow:0 4px 16px #0004;cursor:pointer}
@@ -302,7 +307,7 @@
         </section>
         <section id="vilo-page-plugins" class="vilo-section">
           <h3 class="mb-3 text-lg font-bold text-vulo-bright">Plugins</h3>
-          <div class="vilo-card"><b>21 plugins available</b><p class="vilo-muted">Turn features on or off. Changes apply immediately.</p></div>
+          <div class="vilo-card"><b>21 plugins available</b><p class="vilo-muted">All plugins start disabled. Search by name or description, then enable only what you want.</p><input id="vilo-plugin-search" class="vilo-input" type="search" placeholder="Search plugins..." autocomplete="off"><p id="vilo-plugin-results" class="vilo-muted mt-2">Showing all 21 plugins</p></div>
           <div id="vilo-plugin-list"></div>
         </section>
         <section id="vilo-page-themes" class="vilo-section" hidden>
@@ -339,6 +344,7 @@
           <p class="vilo-muted">Vilo is an independent userscript, not an official VuloChat feature.</p>
           <a class="text-vulo-accent underline" href="https://github.com/Tvmanisback/Vilo" target="_blank" rel="noopener noreferrer">Vilo on GitHub</a>
         </section>
+        <div class="flex items-center justify-between border-b border-vulo-line pb-4 mb-5"><div><h2 class="vilo-title">Vilo</h2><p class="vilo-muted">Independent VuloChat enhancements</p></div><button class="vilo-btn" id="vilo-close">Close ✕</button></div>
         <nav class="flex flex-wrap gap-2 border-t border-vulo-line pt-4" aria-label="Vilo sections">
           <button class="vilo-btn" data-vilo-page="plugins">Plugins</button>
           <button class="vilo-btn" data-vilo-page="themes">Themes</button>
@@ -362,9 +368,11 @@
           <span><strong>${esc(name)}</strong><small>${esc(description)}</small></span>
           <input class="vilo-switch" type="checkbox" data-vilo-plugin="${id}" ${enabled(id)?'checked':''}>
         </label>`).join('');
-      $$('[data-vilo-plugin]',list).forEach(input=>input.addEventListener('change',()=>{
+      $('[data-vilo-plugin]',list).forEach(input=>input.addEventListener('change',()=>{
         cfg.plugins[input.dataset.viloPlugin]=input.checked;save();refresh();
       }));
+      const search=$('#vilo-plugin-search');
+      search.oninput=()=>{const q=search.value.trim().toLowerCase();let shown=0;$('.vilo-plugin-row',list).forEach(row=>{const match=!q||row.innerText.toLowerCase().includes(q);row.hidden=!match;if(match)shown++;});$('#vilo-plugin-results').textContent=`Showing ${shown} of ${pluginList.length} plugins`;};
     }
     if(page==='themes') {
       const grid=$('#vilo-theme-grid');
@@ -409,64 +417,28 @@
     }
   }
 
-  function restoreNativeSettings(dialog) {
-    const main=dialog?.querySelector(':scope > div');
-    const original=main?.querySelector(':scope > div[data-vilo-native-content]');
-    if(original){original.hidden=false;original.removeAttribute('data-vilo-native-content');}
-    $('#vilo-settings-content')?.remove();
-    const button=$('#vilo-native-tab');
-    if(button)button.remove();
-  }
-
-  function installNativeSettingsTab() {
-    const dialog=$('[role="dialog"][aria-label="User settings"]');
-    if(!dialog){return;}
-    const nav=dialog.querySelector('nav > div');
-    const main=dialog.querySelector(':scope > div');
-    if(!nav||!main)return;
-    if(!$('#vilo-native-tab',nav)){
-      const divider=$$('div',nav).find(el=>el.className.includes('h-px'));
-      const button=document.createElement('button');
-      button.id='vilo-native-tab';button.type='button';button.textContent='Vilo';
-      button.className='block w-full rounded px-2 py-1.5 text-left text-[15px] text-vulo-muted hover:bg-vulo-hover hover:text-vulo-text';
-      button.addEventListener('click',()=>{
-        const original=main.querySelector(':scope > div');
-        if(original){original.hidden=true;original.setAttribute('data-vilo-native-content','true');}
-        let mount=$('#vilo-settings-content',main);
-        if(!mount){mount=document.createElement('div');mount.id='vilo-settings-content';mount.className='mx-auto max-w-2xl';mount.innerHTML=createPanelContent();main.append(mount);}
-        $$('nav[aria-label="Vilo sections"] [data-vilo-page]',mount).forEach(b=>b.onclick=()=>renderViloPage(b.dataset.viloPage));
-        button.className='block w-full rounded px-2 py-1.5 text-left text-[15px] bg-vulo-active text-vulo-bright';
-        renderViloPage('plugins');
-      });
-      if(divider)divider.before(button);else nav.append(button);
+  function installStandaloneTab() {
+    if(!$('#vilo-standalone-tab')){
+      const button=document.createElement('button');button.id='vilo-standalone-tab';button.type='button';button.textContent='Vilo';button.setAttribute('aria-label','Open Vilo');
+      button.addEventListener('click',openVilo);
+      document.body.append(button);
     }
-    // When the user selects a regular VuloChat settings page, restore its React-owned content.
-    $$('button',nav).forEach(button=>{
-      if(button.id==='vilo-native-tab'||button.dataset.viloListener)return;
-      button.dataset.viloListener='1';
-      button.addEventListener('click',()=>{
-        if(button.id!=='vilo-native-tab'){
-          restoreNativeSettings(dialog);
-          const viloTab=$('#vilo-native-tab',nav);
-          if(viloTab)viloTab.className='block w-full rounded px-2 py-1.5 text-left text-[15px] text-vulo-muted hover:bg-vulo-hover hover:text-vulo-text';
-        }
-      },true);
-    });
   }
 
-  applyTheme();
-  refresh();
+  function openVilo(){
+    if($('#vilo-standalone-overlay'))return;
+    const overlay=document.createElement('div');overlay.id='vilo-standalone-overlay';
+    overlay.innerHTML='<div id="vilo-standalone-window" role="dialog" aria-modal="true" aria-label="Vilo"><div id="vilo-standalone-content"></div></div>';
+    overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+    document.body.append(overlay);
+    const mount=$('#vilo-standalone-content',overlay);mount.innerHTML=createPanelContent();
+    $('nav[aria-label="Vilo sections"] [data-vilo-page]',mount).forEach(b=>b.onclick=()=>renderViloPage(b.dataset.viloPage));
+    $('#vilo-close',mount).onclick=()=>overlay.remove();
+    renderViloPage('plugins');
+  }
+  applyTheme();refresh();installStandaloneTab();
   let scheduled=false;
-  const observer=new MutationObserver(()=>{
-    if(scheduled)return;
-    scheduled=true;
-    requestAnimationFrame(()=>{scheduled=false;installNativeSettingsTab();refresh();});
-  });
+  const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;installStandaloneTab();refresh();});});
   observer.observe(document.body,{childList:true,subtree:true});
-  installNativeSettingsTab();
-  if(typeof GM_registerMenuCommand==='function')GM_registerMenuCommand('Vilo: open VuloChat Settings',()=>{
-    const settingsButton=$('button[aria-label*="Settings"],button[title*="Settings"]');
-    settingsButton?.click();
-    setTimeout(()=>$('#vilo-native-tab')?.click(),250);
-  });
+  if(typeof GM_registerMenuCommand==='function')GM_registerMenuCommand('Open Vilo',openVilo);
 })();
