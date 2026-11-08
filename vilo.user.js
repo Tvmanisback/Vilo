@@ -126,6 +126,7 @@
     const root = document.documentElement;
     const palette = palettes[cfg.theme];
     if (palette) Object.entries(palette).forEach(([key,value]) => root.style.setProperty('--vulo-'+key,value));
+    else ['rail','side','chat','input','hover','active','line','muted','text','bright','accent','accentHover'].forEach(key=>root.style.removeProperty('--vulo-'+key));
     let themeStyle = $('#vilo-imported-theme');
     if (!themeStyle) { themeStyle = document.createElement('style'); themeStyle.id = 'vilo-imported-theme'; document.head.append(themeStyle); }
     themeStyle.textContent = cfg.customCSS || '';
@@ -178,6 +179,7 @@
         b.onclick=async e=>{e.stopPropagation();try{await navigator.clipboard.writeText($('code',pre)?.innerText||pre.innerText);b.textContent='Copied';}catch{b.textContent='Blocked';}setTimeout(()=>b.textContent='Copy code',1000)};
         pre.append(b);
       });
+      if (!enabled('collapseMedia')) { $$('.vilo-message-action',article).filter(b=>b.textContent==='Hide media'||b.textContent==='Show media').forEach(b=>b.remove()); $$('img,iframe',article).forEach(m=>{m.removeAttribute('data-vilo-media');m.classList.remove('vilo-collapsed-media');}); }
       if (enabled('collapseMedia')) $$('img.msg-image, article img, article iframe',article).forEach(media => {
         if (media.dataset.viloMedia) return;
         media.dataset.viloMedia='1';
@@ -185,9 +187,11 @@
         button.onclick=e=>{e.stopPropagation();media.classList.toggle('vilo-collapsed-media');button.textContent=media.classList.contains('vilo-collapsed-media')?'Show media':'Hide media'};
         media.before(button);
       });
+      if (!enabled('linkLabels')) $$('a[data-vilo-external]',article).forEach(a=>{const old=a.getAttribute('data-vilo-old-title');if(old===null)a.removeAttribute('title');else a.setAttribute('title',old);a.removeAttribute('data-vilo-old-title');a.removeAttribute('data-vilo-external');});
       if (enabled('linkLabels')) $$('a[href^="http"]',article).forEach(a => {
         try { if(new URL(a.href).origin!==location.origin){a.dataset.viloExternal='true';a.title='External link: '+new URL(a.href).hostname;} } catch {}
       });
+      if (!enabled('replyHighlight')) $('.vilo-reply-highlight',article)?.classList.remove('vilo-reply-highlight');
       if (enabled('replyHighlight')) {
         const reply = $('p.mb-0\\.5',article);
         if (reply && /Replying to/.test(reply.innerText)) reply.classList.add('vilo-reply-highlight');
@@ -260,6 +264,7 @@
   }
 
   function updateSearch() {
+    if(!enabled('messageSearch')){chatArticles().forEach(a=>a.classList.remove('vilo-search-hit'));const status=$('#vilo-search-count');if(status)status.textContent='Message search is disabled in Plugins.';return;}
     const input=$('#vilo-search-input');
     if(!input)return;
     const query=input.value.trim().toLowerCase();
