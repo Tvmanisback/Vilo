@@ -1,21 +1,51 @@
 # Vilo for VuloChat
 
-A userscript enhancement suite for [VuloChat](https://tvmanisback.github.io/VuloChat/).
+Vilo is a userscript enhancement suite for [VuloChat](https://tvmanisback.github.io/VuloChat/). Version 2 adds a **Vilo tab inside VuloChat's native User Settings** navigation.
 
 ## Install
-1. Install a userscript manager such as [Violentmonkey](https://violentmonkey.github.io/) or [Tampermonkey](https://www.tampermonkey.net/).
+
+1. Install a userscript manager that supports the GM storage API.
 2. Install [vilo.user.js](https://raw.githubusercontent.com/Tvmanisback/Vilo/main/vilo.user.js).
-3. Open VuloChat and tap the floating **✦ Vilo** button.
+3. Refresh VuloChat and open **User Settings → Vilo**.
 
-## Plugins
-24 plugin switches are included: timestamps, compact chat, quick copy, code copy, character and word counters, emoji row, hide avatars, hide typing, focus mode, collapse embeds, external link labels, jump to latest, draft backup, Enter-to-send, Markdown guide, image fit, reduce motion, message logger, local clock, message finder, theme manager, reply emphasis, readable text, and toolbar.
+## 21 working plugin options
 
-Some plugins depend on VuloChat's current DOM structure and may need selector updates if the site changes.
+- Message timestamps (keeps VuloChat's native message times visible)
+- Compact messages
+- Quick copy for loaded messages
+- Code block copy
+- Character counter
+- Word counter
+- Quick emoji bar
+- Hide message avatars
+- Focus mode
+- Collapse message images/media
+- External link labels
+- Jump to latest
+- Draft backup
+- Enter to send (desktop only; VuloChat's native behavior is retained by default)
+- Markdown helper
+- Image fit
+- Reduce motion
+- Local message logger
+- Search currently loaded messages
+- Reply highlighting
+- Readable text spacing
+
+Plugins are enabled individually in **Settings → Vilo → Plugins**. Changes apply immediately and are saved in the userscript manager's local storage.
 
 ## Themes
-Built-in presets: Violet Glow, Midnight, Emerald, Sunset, and Light. Import your own `.theme.css` from Vilo → Themes. Imported CSS remains in userscript-manager storage on your device.
 
-## Message logger privacy
-The logger is off by default. When enabled, it stores only message text found in currently rendered page elements, locally in your browser. It does not intercept network traffic, access hidden server data, or upload logs. Export or delete the archive from Vilo → Logger. Be thoughtful about other people's privacy and follow applicable rules before saving or sharing conversations.
+Built-in themes: Violet Glow, Midnight, Emerald, Sunset, and Light. They update VuloChat's actual `--vulo-*` color variables so the whole app changes, not only the Vilo panel.
 
-Vilo is an independent userscript and is not an official VuloChat feature.
+To use a custom theme, open **Settings → Vilo → Themes** and import a `.theme.css` file. Custom CSS is saved locally and applied in the current browser.
+
+## Message logger
+
+The logger is off by default. When enabled, it saves text from message elements currently rendered in the open chat view, on this device only. It does not request hidden history, intercept network traffic, or upload messages. You can export the local archive as JSON or delete it in **Settings → Vilo → Logger**. Be thoughtful about other people's privacy before exporting or sharing an archive.
+
+## Compatibility
+
+Vilo targets VuloChat's current web app structure (message articles, native settings dialog, and message composer). If VuloChat changes those components, selectors may need an update. The userscript does not modify VuloChat's backend or grant additional account permissions.
+
+Vilo is an independent community userscript and is not an official VuloChat feature.
