@@ -108,7 +108,6 @@
     .vilo-theme-dots{display:flex;gap:5px;margin-top:10px}.vilo-theme-dots i{width:15px;height:15px;border-radius:50%}
     .vilo-inline-time{font-size:11px;color:rgb(var(--vulo-muted));margin-left:8px}
     .vilo-message-action{font-size:11px;border:1px solid rgb(var(--vulo-line));border-radius:5px;padding:3px 7px;margin:4px 6px 4px 0;background:rgb(var(--vulo-rail));color:rgb(var(--vulo-text));cursor:pointer}
-    #vilo-standalone-tab{position:fixed;z-index:10001;left:10px;bottom:18px;border:1px solid rgb(var(--vulo-line));border-radius:12px;padding:10px 14px;background:rgb(var(--vulo-accent));color:white;font:700 13px/1 Inter,system-ui,sans-serif;box-shadow:0 5px 20px #0005;cursor:pointer}\n    #vilo-standalone-overlay{position:fixed;z-index:10000;inset:0;background:#08070dcc;display:flex;align-items:center;justify-content:center;padding: min(4vw,28px)}\n    #vilo-standalone-window{width:min(900px,100%);height:min(780px,100%);overflow:auto;background:rgb(var(--vulo-chat));border:1px solid rgb(var(--vulo-line));border-radius:14px;padding:22px;box-shadow:0 20px 80px #0009}\n    .vilo-plugin-row[hidden]{display:none!important}\n    #vilo-draft-stats{font-size:11px;color:rgb(var(--vulo-muted));text-align:right;padding:2px 4px}
     #vilo-emoji-bar{display:flex;gap:5px;margin:0 0 6px}
     #vilo-emoji-bar button{border:0;border-radius:6px;padding:5px 7px;background:rgb(var(--vulo-side));cursor:pointer}
     #vilo-jump-latest{position:fixed;z-index:40;right:24px;bottom:86px;border:0;border-radius:20px;padding:9px 13px;background:rgb(var(--vulo-accent));color:white;font-weight:600;box-shadow:0 4px 16px #0004;cursor:pointer}
@@ -344,7 +343,7 @@
           <p class="vilo-muted">Vilo is an independent userscript, not an official VuloChat feature.</p>
           <a class="text-vulo-accent underline" href="https://github.com/Tvmanisback/Vilo" target="_blank" rel="noopener noreferrer">Vilo on GitHub</a>
         </section>
-        <div class="flex items-center justify-between border-b border-vulo-line pb-4 mb-5"><div><h2 class="vilo-title">Vilo</h2><p class="vilo-muted">Independent VuloChat enhancements</p></div><button class="vilo-btn" id="vilo-close">Close ✕</button></div>
+        <div class="border-b border-vulo-line pb-4 mb-5"><h2 class="vilo-title">Vilo</h2><p class="vilo-muted">Independent VuloChat enhancements</p></div>
         <nav class="flex flex-wrap gap-2 border-t border-vulo-line pt-4" aria-label="Vilo sections">
           <button class="vilo-btn" data-vilo-page="plugins">Plugins</button>
           <button class="vilo-btn" data-vilo-page="themes">Themes</button>
@@ -417,28 +416,34 @@
     }
   }
 
-  function installStandaloneTab() {
-    if(!$('#vilo-standalone-tab')){
-      const button=document.createElement('button');button.id='vilo-standalone-tab';button.type='button';button.textContent='Vilo';button.setAttribute('aria-label','Open Vilo');
-      button.addEventListener('click',openVilo);
-      document.body.append(button);
-    }
+  function installViloSettingsTab() {
+    const dialog=$('[role="dialog"][aria-label="User settings"]');
+    if(!dialog)return;
+    const nav=dialog.querySelector('nav > div'), main=dialog.querySelector(':scope > div');
+    if(!nav||!main||$('#vilo-native-tab',nav))return;
+    const divider=$$('div',nav).find(el=>el.className.includes('h-px'));
+    if(!divider)return;
+    const button=document.createElement('button');
+    button.id='vilo-native-tab';button.type='button';button.textContent='Vilo';
+    button.className='block w-full rounded px-2 py-1.5 text-left text-[15px] text-vulo-muted hover:bg-vulo-hover hover:text-vulo-text';
+    button.onclick=()=>{
+      const original=main.querySelector(':scope > div');
+      if(original){original.hidden=true;original.setAttribute('data-vilo-native-content','true');}
+      let mount=$('#vilo-settings-content',main);
+      if(!mount){mount=document.createElement('div');mount.id='vilo-settings-content';mount.className='mx-auto max-w-2xl';mount.innerHTML=createPanelContent();main.append(mount);$$('nav[aria-label="Vilo sections"] [data-vilo-page]',mount).forEach(x=>x.onclick=()=>renderViloPage(x.dataset.viloPage));}
+      button.className='block w-full rounded px-2 py-1.5 text-left text-[15px] bg-vulo-active text-vulo-bright';
+      renderViloPage('plugins');
+    };
+    divider.after(button);
+    const logout=Array.from(nav.querySelectorAll('button')).find(x=>/log out/i.test(x.textContent||''));
+    if(logout)nav.append(logout);
+    $$('button',nav).forEach(other=>{if(other===button||other.dataset.viloSwitchBound)return;other.dataset.viloSwitchBound='1';other.addEventListener('click',()=>{const original=main.querySelector(':scope > div[data-vilo-native-content]');if(original){original.hidden=false;original.removeAttribute('data-vilo-native-content');}$('#vilo-settings-content',main)?.remove();button.className='block w-full rounded px-2 py-1.5 text-left text-[15px] text-vulo-muted hover:bg-vulo-hover hover:text-vulo-text';},true);});
   }
 
-  function openVilo(){
-    if($('#vilo-standalone-overlay'))return;
-    const overlay=document.createElement('div');overlay.id='vilo-standalone-overlay';
-    overlay.innerHTML='<div id="vilo-standalone-window" role="dialog" aria-modal="true" aria-label="Vilo"><div id="vilo-standalone-content"></div></div>';
-    overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
-    document.body.append(overlay);
-    const mount=$('#vilo-standalone-content',overlay);mount.innerHTML=createPanelContent();
-    $('nav[aria-label="Vilo sections"] [data-vilo-page]',mount).forEach(b=>b.onclick=()=>renderViloPage(b.dataset.viloPage));
-    $('#vilo-close',mount).onclick=()=>overlay.remove();
-    renderViloPage('plugins');
-  }
-  applyTheme();refresh();installStandaloneTab();
+
+  applyTheme();refresh();installViloSettingsTab();
   let scheduled=false;
-  const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;installStandaloneTab();refresh();});});
+  const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;installViloSettingsTab();refresh();});});
   observer.observe(document.body,{childList:true,subtree:true});
-  if(typeof GM_registerMenuCommand==='function')GM_registerMenuCommand('Open Vilo',openVilo);
+
 })();
