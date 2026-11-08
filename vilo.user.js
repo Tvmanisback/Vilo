@@ -408,7 +408,7 @@
   }
 
   function restoreNativeSettings(dialog) {
-    const main=dialog?.querySelector(':scope > div:nth-of-type(2)');
+    const main=dialog?.querySelector(':scope > div');
     const original=main?.querySelector(':scope > div[data-vilo-native-content]');
     if(original){original.hidden=false;original.removeAttribute('data-vilo-native-content');}
     $('#vilo-settings-content')?.remove();
@@ -420,7 +420,7 @@
     const dialog=$('[role="dialog"][aria-label="User settings"]');
     if(!dialog){return;}
     const nav=dialog.querySelector('nav > div');
-    const main=dialog.querySelector(':scope > div:nth-of-type(2)');
+    const main=dialog.querySelector(':scope > div');
     if(!nav||!main)return;
     if(!$('#vilo-native-tab',nav)){
       const divider=$$('div',nav).find(el=>el.className.includes('h-px'));
