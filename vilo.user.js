@@ -380,7 +380,7 @@
         const file=event.target.files?.[0];if(!file)return;
         if(file.size>200000){$('#vilo-theme-status').textContent='Theme files must be under 200 KB.';return;}
         const css=await file.text();
-        if(/<\\s*script|javascript:|expression\\s*\\(|@import\\s+url/i.test(css)){ $('#vilo-theme-status').textContent='This CSS contains blocked active content.';return; }
+        if(/<\s*script|javascript:|expression\s*\(|@import\s+url/i.test(css)){ $('#vilo-theme-status').textContent='This CSS contains blocked active content.';return; }
         cfg.customCSS=css;cfg.theme='Custom';save();applyTheme();
         $('#vilo-theme-status').textContent='Imported and applied '+file.name+'.';
       };
