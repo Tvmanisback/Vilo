@@ -1,2 +1,1 @@
-/* Vilo Midnight */
-:root{--v-accent:#7c9cff;--v-bg:#0c1220;--v-panel:#111b2d;--v-card:#19263d;--v-text:#eaf1ff;--v-muted:#9eacc5;--v-border:#2d4263}
+:root{--vulo-rail:10 14 25;--vulo-side:16 23 39;--vulo-chat:22 31 51;--vulo-input:29 39 62;--vulo-hover:33 44 68;--vulo-active:42 57 86;--vulo-line:48 64 95;--vulo-muted:147 163 190;--vulo-text:207 219 241;--vulo-bright:241 246 255;--vulo-accent:124 156 255;--vulo-accentHover:99 133 235}
