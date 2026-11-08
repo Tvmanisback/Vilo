@@ -1,2 +1,1 @@
-/* Vilo Sunset */
-:root{--v-accent:#ff9b72;--v-bg:#21131a;--v-panel:#301c25;--v-card:#422632;--v-text:#fff1eb;--v-muted:#d6aaa0;--v-border:#67404b}
+:root{--vulo-rail:31 18 25;--vulo-side:48 28 37;--vulo-chat:64 37 49;--vulo-input:73 43 56;--vulo-hover:78 47 60;--vulo-active:91 54 69;--vulo-line:105 64 79;--vulo-muted:214 170 160;--vulo-text:255 232 222;--vulo-bright:255 247 241;--vulo-accent:255 155 114;--vulo-accentHover:235 128 89}
