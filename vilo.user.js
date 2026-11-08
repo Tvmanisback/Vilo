@@ -27,7 +27,7 @@
       timestamps: true, compact: false, copy: true, codeCopy: true,
       charCount: true, wordCount: false, emojiBar: false, hideAvatars: false,
       focusMode: false, collapseMedia: false, linkLabels: true, jumpLatest: true,
-      draftBackup: true, enterSend: false, markdownHelp: false, imageFit: false,
+      draftBackup: true, enterNewline: false, markdownHelp: false, imageFit: false,
       reduceMotion: false, messageLogger: false, messageSearch: true,
       replyHighlight: true, readableText: false
     },
@@ -67,7 +67,7 @@
     ['linkLabels','External link labels','Mark links that leave VuloChat.'],
     ['jumpLatest','Jump to latest','Add a button to scroll to the newest message.'],
     ['draftBackup','Draft backup','Save and restore unsent drafts locally.'],
-    ['enterSend','Enter to send','Use Enter to send and Shift+Enter for a new line.'],
+    ['enterNewline','Enter for new line','Override desktop Enter-to-send so Enter inserts a line instead.'],
     ['markdownHelp','Markdown helper','Show VuloChat Markdown formatting hints.'],
     ['imageFit','Image fit','Keep message images within the chat column.'],
     ['reduceMotion','Reduce motion','Reduce animations and smooth scrolling.'],
@@ -115,7 +115,7 @@
     body.vilo-reduce-motion *,body.vilo-reduce-motion *::before,body.vilo-reduce-motion *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     body.vilo-image-fit article.group img{max-width:min(100%,560px)!important;max-height:22rem!important;object-fit:contain}
     body.vilo-readable article.group .text-\\[15px\\]{line-height:1.7!important}
-    body.vilo-show-times article.group time[datetime]{display:inline!important;opacity:1!important}
+    body.vilo-show-times article.group time.hidden{display:block!important;opacity:1!important}
     .vilo-search-hit{outline:2px solid rgb(var(--vulo-accent));outline-offset:2px;border-radius:5px}
     .vilo-reply-highlight{border-left:3px solid rgb(var(--vulo-accent));padding-left:8px}
     @media(max-width:700px){.vilo-plugin-row{padding:10px}.vilo-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -160,7 +160,6 @@
     const articles = chatArticles();
     articles.forEach(article => {
       const time = $('header time[datetime]',article);
-      if (enabled('timestamps') && time) time.style.visibility = 'visible';
       if (enabled('copy') && !$('.vilo-copy-message',article)) {
         const button = document.createElement('button');
         button.type='button';button.className='vilo-message-action vilo-copy-message';button.textContent='Copy';
@@ -230,15 +229,13 @@
         const setter=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set;
         setter.call(ta,drafts[draftKey]);ta.dispatchEvent(new Event('input',{bubbles:true}));
       }
-      ta.addEventListener('input',()=>{const all=GM_getValue(DRAFT,{});if(ta.value)all[draftKey]=ta.value;else delete all[draftKey];GM_setValue(DRAFT,all);});
+      ta.addEventListener('input',()=>{if(!enabled('draftBackup'))return;const all=GM_getValue(DRAFT,{});if(ta.value)all[draftKey]=ta.value;else delete all[draftKey];GM_setValue(DRAFT,all);});
     }
-    if(enabled('enterSend')&&!ta.dataset.viloEnterBound){
+    if(!ta.dataset.viloEnterBound){
       ta.dataset.viloEnterBound='1';
       ta.addEventListener('keydown',e=>{
-        if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!/iPhone|iPad|Android/i.test(navigator.userAgent)){
-          e.preventDefault();e.stopImmediatePropagation();
-          const send=ta.parentElement?.querySelector('button[aria-label="Send message"]');
-          if(send&&!send.disabled)send.click();
+        if(enabled('enterNewline')&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!/iPhone|iPad|Android/i.test(navigator.userAgent)){
+          e.stopImmediatePropagation();
         }
       },true);
     }
