@@ -1,2 +1,1 @@
-/* Vilo Violet Glow */
-:root{--v-accent:#a78bfa;--v-bg:#171326;--v-panel:#211a35;--v-card:#2b2144;--v-text:#f5f0ff;--v-muted:#b7a9d3;--v-border:#493866}
+:root{--vulo-rail:25 22 38;--vulo-side:34 29 51;--vulo-chat:42 36 61;--vulo-input:49 43 70;--vulo-hover:53 47 75;--vulo-active:64 56 91;--vulo-line:72 63 99;--vulo-muted:180 169 207;--vulo-text:237 231 250;--vulo-bright:250 247 255;--vulo-accent:167 139 250;--vulo-accentHover:146 115 235}
